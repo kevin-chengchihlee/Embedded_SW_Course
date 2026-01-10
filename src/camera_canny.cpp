@@ -60,15 +60,19 @@ int main(int argc, char **argv)
    if(argc == 5) dirfilename = (char *) "dummy";
 	 else dirfilename = NULL;
 
-   VideoCapture cap;
+   std::string pipeline = "libcamerasrc ! video/x-raw, width=" +
+                        std::to_string(WIDTH) +
+                        ", height=" + std::to_string(HEIGHT) +
+                        ", format=(string)BGR ! videoconvert ! appsink";
+   VideoCapture cap(pipeline, CAP_GSTREAMER);
    // open the default camera (/dev/video0)
    // Check VideoCapture documentation for more details
    if(!cap.open(0)){
 				cout<<"Failed to open /dev/video0"<<endl;
         return 0;
 	 }
-	 cap.set(CV_CAP_PROP_FRAME_WIDTH, WIDTH);
-   cap.set(CV_CAP_PROP_FRAME_HEIGHT,HEIGHT);
+	 cap.set(CAP_PROP_FRAME_WIDTH, WIDTH);
+   cap.set(CAP_PROP_FRAME_HEIGHT,HEIGHT);
 
 	 Mat frame, grayframe;
 
@@ -88,7 +92,7 @@ int main(int argc, char **argv)
    //capture
 	 cap >> frame;
 	 mid = clock();
-	 cvtColor(frame, grayframe, CV_BGR2GRAY);
+	 cvtColor(frame, grayframe, COLOR_BGR2GRAY);
 	 image = grayframe.data;
 
    /****************************************************************************
