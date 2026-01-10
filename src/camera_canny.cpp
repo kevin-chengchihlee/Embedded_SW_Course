@@ -65,12 +65,10 @@ int main(int argc, char **argv)
                         ", height=" + std::to_string(HEIGHT) +
                         ", format=(string)BGR ! videoconvert ! appsink";
    VideoCapture cap(pipeline, CAP_GSTREAMER);
-   // open the default camera (/dev/video0)
-   // Check VideoCapture documentation for more details
-   if(!cap.open(0)){
-				cout<<"Failed to open /dev/video0"<<endl;
-        return 0;
-	 }
+   if (!cap.isOpened()) {
+      cerr << "Failed to open pipeline\n";
+      return -1;
+   }
 	 cap.set(CAP_PROP_FRAME_WIDTH, WIDTH);
    cap.set(CAP_PROP_FRAME_HEIGHT,HEIGHT);
 
