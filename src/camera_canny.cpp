@@ -73,6 +73,8 @@ int main(int argc, char **argv)
    cap.set(CAP_PROP_FRAME_HEIGHT,HEIGHT);
 
    Mat frame, grayframe;
+   clock_t begin, mid, end;
+   double time_elapsed, time_capture, time_process;
    int frame_id = 1;
 
    printf("[INFO] Step mode:\n");
