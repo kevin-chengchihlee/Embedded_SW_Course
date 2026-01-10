@@ -72,36 +72,46 @@ int main(int argc, char **argv)
 	cap.set(CAP_PROP_FRAME_WIDTH, WIDTH);
    cap.set(CAP_PROP_FRAME_HEIGHT,HEIGHT);
 
-	Mat frame, grayframe;
-   clock_t begin, mid, end;
-   double time_elapsed, time_capture, time_process;
+   Mat frame, grayframe;
+   int frame_id = 1;
 
-   printf("[INFO] (On the pop-up window) Press ESC to start Canny edge detection...\n");
+   printf("[INFO] Step mode:\n");
+   printf("  - Press ENTER to run Canny and save frameXXX.pgm\n");
+   printf("  - Press ESC to quit\n");
 
-	for(;;)
-   {  
-      begin = clock();
-
+   for (;;)
+   {
       cap >> frame;
-      if( frame.empty() ) break; // end of video stream
+      if (frame.empty()) {
+         cerr << "Empty frame\n";
+         break;
+      }
 
-      cvtColor(frame, grayframe, COLOR_BGR2GRAY);
-      image = grayframe.data;
+      imshow("[RAW] capturing.... :)", frame);
 
-      canny(image, rows, cols, sigma, tlow, thigh, &edge, dirfilename);
+      int key = waitKey(10);
 
-      Mat edgeMat(rows, cols, CV_8UC1, edge);
+      if (key == 27) { // ESC
+         break;
+      }
 
-      imshow("[RAW] this is you, smile! :)", frame);
-      imshow("[EDGE] this is you, smile! :)", edgeMat);
+      if (key == 13 || key == 10) { // ENTER
+         cvtColor(frame, grayframe, COLOR_BGR2GRAY);
+         image = grayframe.data;
 
-      end = clock();
-      time_elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
-      fps = 1.0 / (time_elapsed > 1e-9 ? time_elapsed : 1e-9);
-      free(edge);   // REQUIRED every frame
-      edge = NULL;
+         canny(image, rows, cols, sigma, tlow, thigh, &edge, NULL);
 
-      if( waitKey(1) == 27 ) break; // stop capturing by pressing ESC
+         Mat edgeMat(rows, cols, CV_8UC1, edge);
+         imshow("[EDGE] Captured and processed :)", edgeMat);
+
+         // ---- save as frame001.pgm, frame002.pgm, ...
+         sprintf(outfilename, "frame%03d.pgm", frame_id++);
+         write_pgm_image(outfilename, edge, rows, cols, NULL, 255);
+         cout << "Saved " << outfilename << endl;
+
+         free(edge);
+         edge = NULL;
+      }
    }
 
    /****************************************************************************
