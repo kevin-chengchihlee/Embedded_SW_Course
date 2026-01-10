@@ -69,29 +69,40 @@ int main(int argc, char **argv)
       cerr << "Failed to open pipeline\n";
       return -1;
    }
-	 cap.set(CAP_PROP_FRAME_WIDTH, WIDTH);
+	cap.set(CAP_PROP_FRAME_WIDTH, WIDTH);
    cap.set(CAP_PROP_FRAME_HEIGHT,HEIGHT);
 
-	 Mat frame, grayframe;
-
-   printf("[INFO] (On the pop-up window) Press ESC to start Canny edge detection...\n");
-	 for(;;)
-   {
-			cap >> frame;
-	 		if( frame.empty() ) break; // end of video stream
-	 		imshow("[RAW] this is you, smile! :)", frame);
-	 		if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
-   }
-
+	Mat frame, grayframe;
    clock_t begin, mid, end;
    double time_elapsed, time_capture, time_process;
 
-   begin = clock();
-   //capture
-	 cap >> frame;
-	 mid = clock();
-	 cvtColor(frame, grayframe, COLOR_BGR2GRAY);
-	 image = grayframe.data;
+   printf("[INFO] (On the pop-up window) Press ESC to start Canny edge detection...\n");
+
+	for(;;)
+   {  
+      begin = clock();
+
+      cap >> frame;
+      if( frame.empty() ) break; // end of video stream
+
+      cvtColor(frame, grayframe, COLOR_BGR2GRAY);
+      image = grayframe.data;
+
+      canny(image, rows, cols, sigma, tlow, thigh, &edge, dirfilename);
+
+      Mat edgeMat(rows, cols, CV_8UC1, edge);
+
+      imshow("[RAW] this is you, smile! :)", frame);
+      imshow("[EDGE] this is you, smile! :)", edgeMat);
+
+      end = clock();
+      time_elapsed = (double)(end - begin) / CLOCKS_PER_SEC;
+      fps = 1.0 / (time_elapsed > 1e-9 ? time_elapsed : 1e-9);
+      free(edge);   // REQUIRED every frame
+      edge = NULL;
+
+      if( waitKey(1) == 27 ) break; // stop capturing by pressing ESC
+   }
 
    /****************************************************************************
    * Perform the edge detection. All of the work takes place here.
