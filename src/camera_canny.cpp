@@ -109,12 +109,11 @@ int main(int argc, char **argv)
             image = grayframe.data;
 
             canny(image, rows, cols, sigma, tlow, thigh, &edge, NULL);
-
             Mat edgeMat(rows, cols, CV_8UC1, edge);
             imshow("[EDGE] Captured and processed :)", edgeMat);
-
+            
             // ---- save as frame001.pgm, frame002.pgm, ...
-            sprintf(outfilename, "frame%03d.pgm", frame_id++);
+            sprintf(outfilename, "camera_canny_img/frame%03d.pgm", frame_id++);
             write_pgm_image(outfilename, edge, rows, cols, NULL, 255);
             cout << "Saved " << outfilename << endl;
 
@@ -165,7 +164,6 @@ int main(int argc, char **argv)
 	// 	 imshow("[EDGE] this is you, smile! :)", grayframe);
 	// 	 if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
 	//  }
-
     //free resrources    
 //		grayframe.release();
 //    delete image;

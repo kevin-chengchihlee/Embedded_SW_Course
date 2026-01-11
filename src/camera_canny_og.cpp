@@ -64,21 +64,21 @@ int main(int argc, char **argv)
    // open the default camera (/dev/video0)
    // Check VideoCapture documentation for more details
    if(!cap.open(0)){
-				cout<<"Failed to open /dev/video0"<<endl;
+      cout<<"Failed to open /dev/video0"<<endl;
         return 0;
-	 }
-	 cap.set(CV_CAP_PROP_FRAME_WIDTH, WIDTH);
-   cap.set(CV_CAP_PROP_FRAME_HEIGHT,HEIGHT);
+   }
+   cap.set(CAP_PROP_FRAME_WIDTH, WIDTH);
+   cap.set(CAP_PROP_FRAME_HEIGHT,HEIGHT);
 
-	 Mat frame, grayframe;
+   Mat frame, grayframe;
 
    printf("[INFO] (On the pop-up window) Press ESC to start Canny edge detection...\n");
-	 for(;;)
+      for(;;)
    {
-			cap >> frame;
-	 		if( frame.empty() ) break; // end of video stream
-	 		imshow("[RAW] this is you, smile! :)", frame);
-	 		if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
+      cap >> frame;
+      if( frame.empty() ) break; // end of video stream
+      imshow("[RAW] this is you, smile! :)", frame);
+      if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
    }
 
    clock_t begin, mid, end;
@@ -86,10 +86,10 @@ int main(int argc, char **argv)
 
    begin = clock();
    //capture
-	 cap >> frame;
-	 mid = clock();
-	 cvtColor(frame, grayframe, CV_BGR2GRAY);
-	 image = grayframe.data;
+   cap >> frame;
+   mid = clock();
+   cvtColor(frame, grayframe, COLOR_BGR2GRAY);
+   image = grayframe.data;
 
    /****************************************************************************
    * Perform the edge detection. All of the work takes place here.
@@ -116,20 +116,20 @@ int main(int argc, char **argv)
    time_capture = (double) (mid - begin) / CLOCKS_PER_SEC;
    time_process = (double) (end - mid) / CLOCKS_PER_SEC;
 
-	 imshow("[GRAYSCALE] this is you, smile! :)", grayframe);
+   imshow("[GRAYSCALE] this is you, smile! :)", grayframe);
 
    printf("Elapsed time for capturing+processing one frame: %lf + %lf => %lf seconds\n", time_capture, time_process, time_elapsed);
    printf("FPS: %01lf\n", NFRAME/time_elapsed);
 
-	 grayframe.data = edge;
+   grayframe.data = edge;
    printf("[INFO] (On the pop-up window) Press ESC to terminate the program...\n");
-	 for(;;){
-		 imshow("[EDGE] this is you, smile! :)", grayframe);
-		 if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
-	 }
+   for(;;){
+      imshow("[EDGE] this is you, smile! :)", grayframe);
+      if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
+   }
 
     //free resrources    
-//		grayframe.release();
-//    delete image;
+    //grayframe.release();
+    //delete image;
     return 0;
 }
