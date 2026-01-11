@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "opencv2/opencv.hpp"
 #include "canny_util.h"
+#include <unistd.h>
 
 using namespace std;
 using namespace cv;
@@ -31,7 +32,7 @@ int main(int argc, char **argv)
 			        in the histogram of the magnitude of the
 			        gradient image that passes non-maximal
 			        suppression. */
-
+   float cap_len {0.0};
    /****************************************************************************
    * Get the command line arguments.
    ****************************************************************************/
@@ -54,21 +55,25 @@ int main(int argc, char **argv)
    sigma = atof(argv[1]);
    tlow = atof(argv[2]);
    thigh = atof(argv[3]);
+   cap_len = atof(argv[4]);//added for capturing time
    rows = HEIGHT;
    cols = WIDTH;
 
    if(argc == 5) dirfilename = (char *) "dummy";
-	 else dirfilename = NULL;
+	else dirfilename = NULL;
 
    std::string pipeline = "libcamerasrc ! video/x-raw, width=" +
                         std::to_string(WIDTH) +
                         ", height=" + std::to_string(HEIGHT) +
                         ", format=(string)BGR ! videoconvert ! appsink";
+
    VideoCapture cap(pipeline, CAP_GSTREAMER);
+
    if (!cap.isOpened()) {
       cerr << "Failed to open pipeline\n";
       return -1;
    }
+
 	cap.set(CAP_PROP_FRAME_WIDTH, WIDTH);
    cap.set(CAP_PROP_FRAME_HEIGHT,HEIGHT);
 
@@ -93,65 +98,73 @@ int main(int argc, char **argv)
 
       int key = waitKey(10);
 
-      if (key == 27) { // ESC
+      if (key == 27) { //ESC
          break;
       }
 
-      if (key == 13 || key == 10) { // ENTER
-         cvtColor(frame, grayframe, COLOR_BGR2GRAY);
-         image = grayframe.data;
+      if (key == 13 || key == 10) { //ENTER
 
-         canny(image, rows, cols, sigma, tlow, thigh, &edge, NULL);
+         for(float timer = 0.0; timer < cap_len; timer++){
+            cvtColor(frame, grayframe, COLOR_BGR2GRAY);
+            image = grayframe.data;
 
-         Mat edgeMat(rows, cols, CV_8UC1, edge);
-         imshow("[EDGE] Captured and processed :)", edgeMat);
+            canny(image, rows, cols, sigma, tlow, thigh, &edge, NULL);
 
-         // ---- save as frame001.pgm, frame002.pgm, ...
-         sprintf(outfilename, "frame%03d.pgm", frame_id++);
-         write_pgm_image(outfilename, edge, rows, cols, NULL, 255);
-         cout << "Saved " << outfilename << endl;
+            Mat edgeMat(rows, cols, CV_8UC1, edge);
+            imshow("[EDGE] Captured and processed :)", edgeMat);
 
-         free(edge);
-         edge = NULL;
+            // ---- save as frame001.pgm, frame002.pgm, ...
+            sprintf(outfilename, "frame%03d.pgm", frame_id++);
+            write_pgm_image(outfilename, edge, rows, cols, NULL, 255);
+            cout << "Saved " << outfilename << endl;
+
+            free(edge);
+            edge = NULL;
+            usleep(500000); //waiting 500 ms
+
+            if (key == 27) { //ESC
+               break;
+            }
+         }
       }
    }
 
    /****************************************************************************
    * Perform the edge detection. All of the work takes place here.
    ****************************************************************************/
-   if(VERBOSE) printf("Starting Canny edge detection.\n");
-   if(dirfilename != NULL){
-      sprintf(composedfname, "camera_s_%3.2f_l_%3.2f_h_%3.2f.fim",
-      sigma, tlow, thigh);
-      dirfilename = composedfname;
-   }
-   canny(image, rows, cols, sigma, tlow, thigh, &edge, dirfilename);
+   // if(VERBOSE) printf("Starting Canny edge detection.\n");
+   // if(dirfilename != NULL){
+   //    sprintf(composedfname, "camera_s_%3.2f_l_%3.2f_h_%3.2f.fim",
+   //    sigma, tlow, thigh);
+   //    dirfilename = composedfname;
+   // }
+   // canny(image, rows, cols, sigma, tlow, thigh, &edge, dirfilename);
 
    /****************************************************************************
    * Write out the edge image to a file.
    ****************************************************************************/
-   sprintf(outfilename, "camera_s_%3.2f_l_%3.2f_h_%3.2f.pgm", sigma, tlow, thigh);
-   if(VERBOSE) printf("Writing the edge iname in the file %s.\n", outfilename);
-   if(write_pgm_image(outfilename, edge, rows, cols, NULL, 255) == 0){
-      fprintf(stderr, "Error writing the edge image, %s.\n", outfilename);
-      exit(1);
-   }
-   end = clock();
-   time_elapsed = (double) (end - begin) / CLOCKS_PER_SEC;
-   time_capture = (double) (mid - begin) / CLOCKS_PER_SEC;
-   time_process = (double) (end - mid) / CLOCKS_PER_SEC;
+   // sprintf(outfilename, "camera_s_%3.2f_l_%3.2f_h_%3.2f.pgm", sigma, tlow, thigh);
+   // if(VERBOSE) printf("Writing the edge iname in the file %s.\n", outfilename);
+   // if(write_pgm_image(outfilename, edge, rows, cols, NULL, 255) == 0){
+   //    fprintf(stderr, "Error writing the edge image, %s.\n", outfilename);
+   //    exit(1);
+   // }
+   // end = clock();
+   // time_elapsed = (double) (end - begin) / CLOCKS_PER_SEC;
+   // time_capture = (double) (mid - begin) / CLOCKS_PER_SEC;
+   // time_process = (double) (end - mid) / CLOCKS_PER_SEC;
 
-	 imshow("[GRAYSCALE] this is you, smile! :)", grayframe);
+	//  imshow("[GRAYSCALE] this is you, smile! :)", grayframe);
 
-   printf("Elapsed time for capturing+processing one frame: %lf + %lf => %lf seconds\n", time_capture, time_process, time_elapsed);
-   printf("FPS: %01lf\n", NFRAME/time_elapsed);
+   // printf("Elapsed time for capturing+processing one frame: %lf + %lf => %lf seconds\n", time_capture, time_process, time_elapsed);
+   // printf("FPS: %01lf\n", NFRAME/time_elapsed);
 
-	 grayframe.data = edge;
-   printf("[INFO] (On the pop-up window) Press ESC to terminate the program...\n");
-	 for(;;){
-		 imshow("[EDGE] this is you, smile! :)", grayframe);
-		 if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
-	 }
+	//  grayframe.data = edge;
+   // printf("[INFO] (On the pop-up window) Press ESC to terminate the program...\n");
+	//  for(;;){
+	// 	 imshow("[EDGE] this is you, smile! :)", grayframe);
+	// 	 if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
+	//  }
 
     //free resrources    
 //		grayframe.release();
