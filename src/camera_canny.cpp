@@ -32,11 +32,11 @@ int main(int argc, char **argv)
 			        in the histogram of the magnitude of the
 			        gradient image that passes non-maximal
 			        suppression. */
-   float cap_len {0.0};
+   float cap_len {0.0};//time of capturing in 100 million seconds
    /****************************************************************************
    * Get the command line arguments.
    ****************************************************************************/
-   if(argc < 4){
+   if(argc < 5){
    fprintf(stderr,"\n<USAGE> %s sigma tlow thigh [writedirim]\n",argv[0]);
       fprintf(stderr,"      sigma:      Standard deviation of the gaussian");
       fprintf(stderr," blur kernel.\n");
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
    rows = HEIGHT;
    cols = WIDTH;
 
-   if(argc == 5) dirfilename = (char *) "dummy";
+   if(argc == 6) dirfilename = (char *) "dummy";
 	else dirfilename = NULL;
 
    std::string pipeline = "libcamerasrc ! video/x-raw, width=" +
@@ -83,28 +83,31 @@ int main(int argc, char **argv)
    int frame_id = 1;
 
    printf("[INFO] Step mode:\n");
-   printf("  - Press ENTER to run Canny and save frameXXX.pgm\n");
+   printf("  - Press ENTER to run Canny and save frameXXX.pgm for %.2f million seconds\n", cap_len*100);
    printf("  - Press ESC to quit\n");
 
    for (;;)
    {
       cap >> frame;
-      if (frame.empty()) {
-         cerr << "Empty frame\n";
-         break;
-      }
-
+      
+      if (frame.empty()) {break;}
+      
       imshow("[RAW] capturing.... :)", frame);
-
-      int key = waitKey(10);
-
-      if (key == 27) { //ESC
-         break;
-      }
-
+      
+      int key = waitKey(1);
+      if (key == 27) break;
+      
       if (key == 13 || key == 10) { //ENTER
 
-         for(float timer = 0.0; timer < cap_len; timer++){
+         for(float timer = 0.0; timer < cap_len; timer+=1){
+            cap >> frame;
+            if (frame.empty()) {
+               cerr << "Empty frame\n";
+               break;
+            }
+
+            imshow("[RAW] capturing.... :)", frame);
+            
             cvtColor(frame, grayframe, COLOR_BGR2GRAY);
             image = grayframe.data;
 
@@ -112,16 +115,16 @@ int main(int argc, char **argv)
             Mat edgeMat(rows, cols, CV_8UC1, edge);
             imshow("[EDGE] Captured and processed :)", edgeMat);
             
-            // ---- save as frame001.pgm, frame002.pgm, ...
+            //save as frame001.pgm, frame002.pgm...
             sprintf(outfilename, "camera_canny_img/frame%03d.pgm", frame_id++);
             write_pgm_image(outfilename, edge, rows, cols, NULL, 255);
             cout << "Saved " << outfilename << endl;
 
             free(edge);
             edge = NULL;
-            usleep(500000); //waiting 500 ms
-
-            if (key == 27) { //ESC
+            
+            int k = waitKey(100);//waiting 100 ms and key
+            if (k == 27) { //ESC
                break;
             }
          }
