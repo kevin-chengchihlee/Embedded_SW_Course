@@ -85,7 +85,7 @@ int main(int argc, char **argv)
    printf("[INFO] Step mode:\n");
    printf("  - Press ENTER to run Canny and save frameXXX.pgm for %.2f million seconds\n", cap_len*100);
    printf("  - Press ESC to quit\n");
-
+   
    for (;;)
    {
       cap >> frame;
@@ -98,9 +98,11 @@ int main(int argc, char **argv)
       if (key == 27) break;
       
       if (key == 13 || key == 10) { //ENTER
-
+         
          for(float timer = 0.0; timer < cap_len; timer+=1){
+            begin = clock();//starting of the capturing
             cap >> frame;
+            mid = clock();//end(mid) of the capturing
             if (frame.empty()) {
                cerr << "Empty frame\n";
                break;
@@ -119,7 +121,15 @@ int main(int argc, char **argv)
             sprintf(outfilename, "camera_canny_img/frame%03d.pgm", frame_id++);
             write_pgm_image(outfilename, edge, rows, cols, NULL, 255);
             cout << "Saved " << outfilename << endl;
-
+            
+            end = clock();//end of the processing
+            time_elapsed = (double) (end - begin) / CLOCKS_PER_SEC;
+            time_capture = (double) (mid - begin) / CLOCKS_PER_SEC;
+            time_process = (double) (end - mid) / CLOCKS_PER_SEC;
+            printf("  Capture time:      %.6f s\n", time_capture);
+            printf("  Process time:      %.6f s\n", time_process);
+            printf("  Capture + Process: %.6f s\n", time_elapsed);
+            
             free(edge);
             edge = NULL;
             
