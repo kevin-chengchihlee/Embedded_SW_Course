@@ -92,9 +92,9 @@ int main(int argc, char **argv)
       
       if (frame.empty()) {break;}
       
-      imshow("[RAW] capturing.... :)", frame);
+      imshow("[RAW] capturing.... :)", frame);//showing the camera frames
       
-      int key = waitKey(1);
+      int key = waitKey(1);//waiting for the key command
       if (key == 27) break;
       
       if (key == 13 || key == 10) { //ENTER
