@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string>
 #include <cstdlib>
-#include <sys/stat.h>   // mkdir
+#include <sys/stat.h>
 #include <errno.h>
 
 #include "opencv2/opencv.hpp"
@@ -27,24 +27,15 @@ static bool ensure_dir(const std::string& path)
 
 static std::string frame_name(const std::string& outdir, int frame_id)
 {
-    // frame001.pgm style
+    //frame001.pgm style
     std::ostringstream oss;
     oss << outdir << "/frame" << std::setfill('0') << std::setw(3) << frame_id << ".pgm";
     return oss.str();
 }
+
+// ./camera_canny <sigma> <tlow> <thigh> <mode> <value> <outdir>
 int main(int argc, char **argv)
 {
-    // Usage:
-    //   ./camera_canny <sigma> <tlow> <thigh> <mode> <value> <outdir>
-    //
-    // mode:
-    //   s  => run for <value> seconds (wall-time)
-    //   n  => run for <value> frames
-    //
-    // Example:
-    //   ./camera_canny 1.0 0.1 0.3 s 5 camera_canny_img
-    //   ./camera_canny 1.0 0.1 0.3 n 150 camera_canny_img
-
     if (argc < 7) {
         cerr << "\nUSAGE:\n  "
              << argv[0]
@@ -79,7 +70,7 @@ int main(int argc, char **argv)
     const int rows = HEIGHT;
     const int cols = WIDTH;
 
-    // Pi 5 + libcamera via GStreamer
+    //pi 5 and libcamera via GStreamer
     std::string pipeline =
         "libcamerasrc ! video/x-raw, width=" + std::to_string(WIDTH) +
         ", height=" + std::to_string(HEIGHT) +
@@ -102,7 +93,7 @@ int main(int argc, char **argv)
          << "  outdir=" << outdir << "\n"
          << "Press ESC anytime to stop early.\n";
 
-    // ---- TOTAL timers (for average FPS) ----
+    //average FPS
     clock_t cpu_begin_total = clock();
     auto wall_begin_total = std::chrono::steady_clock::now();
 
@@ -112,11 +103,11 @@ int main(int argc, char **argv)
     int frame_id = 1;
     int frames_done = 0;
 
-    // For seconds mode, we stop when wall elapsed >= value
-    // For frames mode, we stop when frames_done >= value
+    //for seconds mode, we stop when wall elapsed >= value
+    //for frames mode, we stop when frames_done >= value
     while (true)
        {
-           // termination checks (before grabbing next frame)
+           //termination checks (before grabbing next frame)
            if (mode == 'n' && frames_done >= (int)value) break;
            if (mode == 's') {
                auto now = std::chrono::steady_clock::now();
@@ -124,11 +115,11 @@ int main(int argc, char **argv)
                if (wall_elapsed >= value) break;
            }
 
-           // Optional early stop
+           //esc to stop
            int key0 = waitKey(1);
            if (key0 == 27) break;
 
-           // ---- per-frame CPU capture timing ----
+           //start CPU timing
            clock_t cpu_begin_cap = clock();
            cap >> frame;
            clock_t cpu_end_cap = clock();
@@ -138,13 +129,13 @@ int main(int argc, char **argv)
                break;
            }
 
-           // show raw feed (optional)
+           //show raw camera feed
            imshow("[RAW]", frame);
 
            cvtColor(frame, grayframe, COLOR_BGR2GRAY);
            unsigned char* image = grayframe.data;
 
-           // ---- per-frame CPU process timing ----
+           //cpu timing
            clock_t cpu_begin_proc = clock();
 
            unsigned char* edge = nullptr;
@@ -152,7 +143,7 @@ int main(int argc, char **argv)
 
            clock_t cpu_end_proc = clock();
 
-           // Save edge image
+           //save edge image
            std::string outname = frame_name(outdir, frame_id++);
            if (write_pgm_image((char*)outname.c_str(), edge, rows, cols, NULL, 255) == 0) {
                cerr << "Error writing " << outname << "\n";
@@ -160,11 +151,11 @@ int main(int argc, char **argv)
                break;
            }
 
-           // show edge (optional)
+           //show edge
            Mat edgeMat(rows, cols, CV_8UC1, edge);
            imshow("[EDGE]", edgeMat);
 
-           // accumulate CPU times
+           //accumulate CPU times
            double cpu_cap_s  = (double)(cpu_end_cap  - cpu_begin_cap)  / CLOCKS_PER_SEC;
            double cpu_proc_s = (double)(cpu_end_proc - cpu_begin_proc) / CLOCKS_PER_SEC;
            total_cpu_capture += cpu_cap_s;
@@ -172,7 +163,7 @@ int main(int argc, char **argv)
 
            frames_done++;
 
-           // per-frame print (leave it on for your report/demo)
+           //per-frame
            cout << "Saved " << outname
                 << " | CPU capture=" << fixed << setprecision(6) << cpu_cap_s
                 << " s, CPU process=" << cpu_proc_s << " s\n";
@@ -180,20 +171,20 @@ int main(int argc, char **argv)
            free(edge);
            edge = nullptr;
 
-           // ESC check (so you can stop while window focused)
+           //esc
            int key = waitKey(1);
            if (key == 27) break;
        }
        
-       // ---- TOTAL end times ----
+       //add up end times
        clock_t cpu_end_total = clock();
        auto wall_end_total = std::chrono::steady_clock::now();
 
        double total_cpu = (double)(cpu_end_total - cpu_begin_total) / CLOCKS_PER_SEC;
        double total_wall = std::chrono::duration<double>(wall_end_total - wall_begin_total).count();
 
-       // Average FPS (assignment wants total time / frames)
-       // FPS = frames / total_time
+       //average FPS
+       //FPS = frames / total_time
        double avg_fps_wall = (frames_done > 0 && total_wall > 0.0) ? (frames_done / total_wall) : 0.0;
        double avg_fps_cpu  = (frames_done > 0 && total_cpu  > 0.0) ? (frames_done / total_cpu)  : 0.0;
 
