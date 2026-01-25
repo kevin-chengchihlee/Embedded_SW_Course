@@ -87,10 +87,10 @@ int main(int argc, char **argv)
 
     Mat frame, grayframe;
 
-    cout << "[INFO] Running Canny capture+process\n"
-         << "  sigma=" << sigma << " tlow=" << tlow << " thigh=" << thigh << "\n"
-         << "  mode=" << mode << " value=" << value << "\n"
-         << "  outdir=" << outdir << "\n"
+    cout << "running Canny capture+process\n"
+         << " sigma=" << sigma << " tlow=" << tlow << " thigh=" << thigh << "\n"
+         << " mode=" << mode << " value=" << value << "\n"
+         << " outdir=" << outdir << "\n"
          << "Press ESC anytime to stop early.\n";
 
     //average FPS

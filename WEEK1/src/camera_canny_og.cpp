@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
    Mat frame, grayframe;
 
-   printf("[INFO] (On the pop-up window) Press ESC to start Canny edge detection...\n");
+   printf("Press ESC to start Canny\n");
       for(;;)
    {
       cap >> frame;
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
    printf("FPS: %01lf\n", NFRAME/time_elapsed);
 
    grayframe.data = edge;
-   printf("[INFO] (On the pop-up window) Press ESC to terminate the program...\n");
+   printf("Press ESC to terminate the program...\n");
    for(;;){
       imshow("[EDGE] this is you, smile! :)", grayframe);
       if( waitKey(10) == 27 ) break; // stop capturing by pressing ESC
