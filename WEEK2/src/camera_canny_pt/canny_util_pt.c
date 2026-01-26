@@ -314,6 +314,98 @@ void derrivative_x_y(short int *smoothedim, int rows, int cols,
    }
 }
 
+//Added by Jiang Wan for multi-thread 
+struct thread_args_x
+{
+    unsigned char *image;
+    int rows;
+    int cols;
+    int col_s;
+    int col_e;
+    int row_s;
+    int row_e;
+    int center;
+    float *kernel;
+    float *tempim;
+	short int *smoothedim;
+};
+
+//Added by Jiang Wan for multi-thread 
+void *blur_x(void *arguments)
+{
+   /****************************************************************************
+   * Blur in the x - direction.
+   ****************************************************************************/
+   struct thread_args_x *args = arguments; 
+	
+   unsigned char *image = args->image;
+   int rows = args->rows;
+   int cols = args->cols;
+   int col_s = args->col_s;
+   int col_e = args->col_e;
+   int center = args->center;
+   float *kernel = args->kernel;
+   float *tempim = args->tempim;
+   
+   int r, c, cc;
+   float dot, sum;
+
+   if(VERBOSE) printf("   Bluring the image in the X-direction.\n");
+   for(r=0;r<rows;r++){
+      for(c=col_s;c<col_e;c++){
+         dot = 0.0;
+         sum = 0.0;
+         for(cc=(-center);cc<=center;cc++){
+            if(((c+cc) >= 0) && ((c+cc) < cols)){
+               dot += (float)image[r*cols+(c+cc)] * kernel[center+cc];
+               sum += kernel[center+cc];
+            }
+         }
+         tempim[r*cols+c] = dot/sum;
+      }
+   }
+   return NULL;
+}
+//Added by CHENH-CHIH LEE for multi-thread 
+void *blur_y(void *arguments)
+{
+   /****************************************************************************
+   * Blur in the y - direction.
+   ****************************************************************************/
+   struct thread_args_x *args = arguments; 
+	
+   unsigned char *image = args->image;
+   int rows = args->rows;
+   int cols = args->cols;
+   int row_s = args->row_s;
+   int row_e = args->row_e;
+   int center = args->center;
+   float *kernel = args->kernel;
+   float *tempim = args->tempim;
+   short int *smoothedim = args->smoothedim;
+   
+   int r, c, rr;
+   float dot, sum;
+   
+   if(VERBOSE) printf("   Bluring the image in the Y-direction.\n");
+   for(r=row_s;r<row_e;r++){
+      for(c=0;c<cols;c++){
+         sum = 0.0;
+         dot = 0.0;
+         for(rr=(-center);rr<=center;rr++){
+            if(((r+rr) >= 0) && ((r+rr) < rows)){
+               dot += tempim[(r+rr)*cols+c] * kernel[center+rr];
+               sum += kernel[center+rr];
+            }
+         }
+         (smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
+      }
+   }
+   return NULL;
+}
+
+//Edited by CHENG-CHIH LEE for multi-thread 
+#define N_T 4
 /*******************************************************************************
 * PROCEDURE: gaussian_smooth
 * PURPOSE: Blur an image with a gaussian filter.
@@ -350,43 +442,53 @@ void gaussian_smooth(unsigned char *image, int rows, int cols, float sigma,
       fprintf(stderr, "Error allocating the smoothed image.\n");
       exit(1);
    }
+	//Thread creation for Blur X
+   pthread_t thread[N_T];
+   int iret[N_T];
+   struct thread_args_x args[N_T];
 
-   /****************************************************************************
-   * Blur in the x - direction.
-   ****************************************************************************/
-   if(VERBOSE) printf("   Bluring the image in the X-direction.\n");
-   for(r=0;r<rows;r++){
-      for(c=0;c<cols;c++){
-         dot = 0.0;
-         sum = 0.0;
-         for(cc=(-center);cc<=center;cc++){
-            if(((c+cc) >= 0) && ((c+cc) < cols)){
-               dot += (float)image[r*cols+(c+cc)] * kernel[center+cc];
-               sum += kernel[center+cc];
-            }
-         }
-         tempim[r*cols+c] = dot/sum;
-      }
+   int col_per_t = cols/N_T;
+   int i;
+
+   for(i=0; i<N_T; i++)
+   {
+      args[i].image = image;
+      args[i].rows = rows;
+      args[i].cols = cols;
+      args[i].col_s = col_per_t*i;
+      args[i].col_e = col_per_t*(i+1);
+      args[i].center = center;
+      args[i].kernel = kernel;
+      args[i].tempim = tempim;
+      iret[i] = pthread_create(&thread[i], NULL, &blur_x, &args[i]);
    }
 
-   /****************************************************************************
-   * Blur in the y - direction.
-   ****************************************************************************/
-   if(VERBOSE) printf("   Bluring the image in the Y-direction.\n");
-   for(c=0;c<cols;c++){
-      for(r=0;r<rows;r++){
-         sum = 0.0;
-         dot = 0.0;
-         for(rr=(-center);rr<=center;rr++){
-            if(((r+rr) >= 0) && ((r+rr) < rows)){
-               dot += tempim[(r+rr)*cols+c] * kernel[center+rr];
-               sum += kernel[center+rr];
-            }
-         }
-         (*smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
-      }
+   for(i=0; i<N_T; i++)
+   {
+   	pthread_join(thread[i], NULL);
+   }
+	//Thread creation for Blur Y
+   int row_per_t = rows/N_T;
+
+   for(i=0; i<N_T; i++)
+   {
+      args[i].image = image;
+      args[i].rows = rows;
+      args[i].cols = cols;
+      args[i].row_s = row_per_t*i;
+      args[i].row_e = row_per_t*(i+1);
+      args[i].center = center;
+      args[i].kernel = kernel;
+      args[i].tempim = tempim;
+	  args[i].smoothedim = *smoothedim;
+      iret[i] = pthread_create(&thread[i], NULL, &blur_y, &args[i]);
    }
 
+   for(i=0; i<N_T; i++)
+   {
+   	pthread_join(thread[i], NULL);
+   }
+   
    free(tempim);
    free(kernel);
 }
