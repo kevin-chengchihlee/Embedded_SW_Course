@@ -509,7 +509,7 @@ void *blur_y(void *arguments)
                sum += kernel[center+rr];
             }
          }
-         (*smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
+         (smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
       }
    }
 }
