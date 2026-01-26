@@ -476,6 +476,7 @@ void *blur_x(void *arguments)
          tempim[r*cols+c] = dot/sum;
       }
    }
+   return NULL;
 }
 //Added by CHENH-CHIH LEE for multi-thread 
 void *blur_y(void *arguments)
@@ -512,6 +513,7 @@ void *blur_y(void *arguments)
          (smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
       }
    }
+   return NULL;
 }
 
 //Edited by Jiang Wan for multi-thread 
