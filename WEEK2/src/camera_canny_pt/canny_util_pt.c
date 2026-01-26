@@ -336,7 +336,7 @@ void *blur_x(void *arguments)
    /****************************************************************************
    * Blur in the x - direction.
    ****************************************************************************/
-   struct thread_args_x *args = arguments; 
+   struct thread_args_x *args = (struct thread_args_x*)arguments; 
 	
    unsigned char *image = args->image;
    int rows = args->rows;
@@ -372,7 +372,7 @@ void *blur_y(void *arguments)
    /****************************************************************************
    * Blur in the y - direction.
    ****************************************************************************/
-   struct thread_args_x *args = arguments; 
+   struct thread_args_x *args = (struct thread_args_x*)arguments; 
 	
    unsigned char *image = args->image;
    int rows = args->rows;
