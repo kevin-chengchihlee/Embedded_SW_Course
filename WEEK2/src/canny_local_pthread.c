@@ -592,7 +592,7 @@ void gaussian_smooth(unsigned char *image, int rows, int cols, float sigma,
       args[i].center = center;
       args[i].kernel = kernel;
       args[i].tempim = tempim;
-	  args[i].smoothedim = smoothedim;
+	  args[i].smoothedim = *smoothedim;
       iret[i] = pthread_create(&thread[i], NULL, &blur_y, &args[i]);
    }
 
