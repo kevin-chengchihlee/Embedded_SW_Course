@@ -8,7 +8,7 @@
 #include <errno.h>
 
 #include "opencv2/opencv.hpp"
-#include "canny_util.h"
+#include "canny_util_omp.h"
 
 using namespace std;
 using namespace cv;

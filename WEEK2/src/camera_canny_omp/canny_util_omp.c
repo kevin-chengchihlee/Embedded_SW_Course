@@ -354,38 +354,50 @@ void gaussian_smooth(unsigned char *image, int rows, int cols, float sigma,
    /****************************************************************************
    * Blur in the x - direction.
    ****************************************************************************/
-   if(VERBOSE) printf("   Bluring the image in the X-direction.\n");
-   for(r=0;r<rows;r++){
-      for(c=0;c<cols;c++){
-         dot = 0.0;
-         sum = 0.0;
-         for(cc=(-center);cc<=center;cc++){
-            if(((c+cc) >= 0) && ((c+cc) < cols)){
-               dot += (float)image[r*cols+(c+cc)] * kernel[center+cc];
-               sum += kernel[center+cc];
-            }
-         }
-         tempim[r*cols+c] = dot/sum;
-      }
+   int n_thread = 4;					//Edited by CHENG-CHIH LEE for multi-thread
+   omp_set_dynamic(0);					//Edited by CHENG-CHIH LEE for multi-thread
+   omp_set_num_threads(n_thread);			//Edited by CHENG-CHIH LEE for multi-thread
+   #pragma omp parallel private(c, cc, dot, sum)	//Edited by CHENG-CHIH LEE for multi-thread
+   {
+	   if(VERBOSE) printf("   Bluring the image in the X-direction.\n");
+	   #pragma omp for
+	   for(r=0;r<rows;r++){
+		  for(c=0;c<cols;c++){
+			 dot = 0.0;
+			 sum = 0.0;
+			 for(cc=(-center);cc<=center;cc++){
+				if(((c+cc) >= 0) && ((c+cc) < cols)){
+				   dot += (float)image[r*cols+(c+cc)] * kernel[center+cc];
+				   sum += kernel[center+cc];
+				}
+			 }
+			 tempim[r*cols+c] = dot/sum;
+		  }
+	   }
    }
 
    /****************************************************************************
    * Blur in the y - direction.
    ****************************************************************************/
-   if(VERBOSE) printf("   Bluring the image in the Y-direction.\n");
-   for(c=0;c<cols;c++){
-      for(r=0;r<rows;r++){
-         sum = 0.0;
-         dot = 0.0;
-         for(rr=(-center);rr<=center;rr++){
-            if(((r+rr) >= 0) && ((r+rr) < rows)){
-               dot += tempim[(r+rr)*cols+c] * kernel[center+rr];
-               sum += kernel[center+rr];
-            }
-         }
-         (*smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
-      }
-   }
+    omp_set_dynamic(0);					//Edited by CHENG-CHIH LEE for multi-thread
+    omp_set_num_threads(n_thread);			//Edited by CHENG-CHIH LEE for multi-thread
+	#pragma omp parallel private(r, rr, dot, sum)	//Edited by CHENG-CHIH LEE for multi-thread
+	{
+	   if(VERBOSE) printf("   Bluring the image in the Y-direction.\n");
+	   #pragma omp for
+	   for(c=0;c<cols;c++){
+		  for(r=0;r<rows;r++){
+			 sum = 0.0;
+			 dot = 0.0;
+			 for(rr=(-center);rr<=center;rr++){
+				if(((r+rr) >= 0) && ((r+rr) < rows)){
+				   dot += tempim[(r+rr)*cols+c] * kernel[center+rr];
+				   sum += kernel[center+rr];
+				}
+			 }
+			 (*smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
+		  }
+	   }
 
    free(tempim);
    free(kernel);
