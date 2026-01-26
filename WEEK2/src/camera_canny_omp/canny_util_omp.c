@@ -398,7 +398,7 @@ void gaussian_smooth(unsigned char *image, int rows, int cols, float sigma,
 			 (*smoothedim)[r*cols+c] = (short int)(dot*BOOSTBLURFACTOR/sum + 0.5);
 		  }
 	   }
-
+	}
    free(tempim);
    free(kernel);
 }
