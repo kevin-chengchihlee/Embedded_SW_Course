@@ -493,7 +493,7 @@ void gaussian_smooth(unsigned char *image, int rows, int cols, float sigma,
    ****************************************************************************/
     omp_set_dynamic(0);					//Edited by CHENG-CHIH LEE for multi-thread
     omp_set_num_threads(n_thread);			//Edited by CHENG-CHIH LEE for multi-thread
-	#pragma omp parallel private(r, cc, dot, sum)	//Edited by CHENG-CHIH LEE for multi-thread
+	#pragma omp parallel private(r, rr, dot, sum)	//Edited by CHENG-CHIH LEE for multi-thread
 	{
 	   if(VERBOSE) printf("   Bluring the image in the Y-direction.\n");
        #pragma omp for
