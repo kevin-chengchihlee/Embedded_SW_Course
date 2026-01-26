@@ -9,6 +9,7 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <pthread.h>
 
 #define VERBOSE 0
 
