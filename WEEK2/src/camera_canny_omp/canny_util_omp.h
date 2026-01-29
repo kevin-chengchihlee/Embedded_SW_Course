@@ -11,7 +11,7 @@ extern "C" {
 #include <string.h>
 #include <omp.h>
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 #define NOEDGE 255
 #define POSSIBLE_EDGE 128
